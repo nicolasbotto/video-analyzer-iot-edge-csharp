@@ -90,12 +90,6 @@ namespace SampleApp.Helpers
                    Description = "Height of the video frame to be received from AVA.",
                    Default = "416"
                });
-
-            properties.Parameters.Add(
-               new ParameterDeclaration("videoName", ParameterType.String)
-               {
-                   Description = "The name of the video"
-               });
         }
 
         // Add sources to Topology
@@ -113,16 +107,6 @@ namespace SampleApp.Helpers
         // Add processors to Topology
         private static void SetProcessors(PipelineTopologyProperties properties)
         {
-            properties.Processors.Add(
-                new SignalGateProcessor("signalGateProcessor", new List<NodeInput> { { new NodeInput("rtspSource") } })
-                {
-                    ActivationEvaluationWindow = "PT1S",
-                    ActivationSignalOffset = "-PT5S",
-                    MinimumActivationTime = "PT30S",
-                    MaximumActivationTime = "PT30S"
-                }
-            );
-
             properties.Processors.Add(new HttpExtension("inferenceClient", new List<NodeInput> { { new NodeInput("rtspSource") } },
                new UnsecuredEndpoint("${inferencingUrl}")
                {
@@ -147,24 +131,6 @@ namespace SampleApp.Helpers
                     },
                     "inferenceOutput")
                 );
-
-            properties.Sinks.Add(
-               new VideoSink("videoSink",
-                   new List<NodeInput> {
-                        { new NodeInput("signalGateProcessor") }
-                   },
-                   "${videoName}",
-                   "/var/lib/azuremediaservices/tmp/",
-                   "2048")
-               {
-                   VideoCreationProperties = new VideoCreationProperties()
-                   {
-                       Description = "EvrHubVideo sample video",
-                       SegmentLength = "PT30S",
-                       Title = "EvrHubVideo"
-                   }
-               }
-           );
         }
 
         public static LivePipeline BuildLivePipepine(
@@ -172,8 +138,7 @@ namespace SampleApp.Helpers
             string pipelineTopologyName,
             string url,
             string userName,
-            string password,
-            string videoName)
+            string password)
         {
             var result = new LivePipeline(livePipelineName)
             {
@@ -187,7 +152,6 @@ namespace SampleApp.Helpers
             result.Properties.Parameters.Add(new ParameterDefinition("rtspUrl") { Value = url });
             result.Properties.Parameters.Add(new ParameterDefinition("rtspUserName") { Value = userName });
             result.Properties.Parameters.Add(new ParameterDefinition("rtspPassword") { Value = password });
-            result.Properties.Parameters.Add(new ParameterDefinition("videoName") { Value = videoName});
 
             return result;
         }

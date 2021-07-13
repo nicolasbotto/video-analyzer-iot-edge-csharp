@@ -249,7 +249,8 @@ export class Cloud extends Component {
 
     async changeStateLivePipelineOperation(livePipeline, properties) {
         try {
-            await this.api.changeStateLivePipeline(livePipeline, properties);
+            const action = properties.state.toUpperCase() === "INACTIVE" ? "activate" : "deactivate";
+            await this.api.changeStateLivePipeline(livePipeline, action);
             await this.getLivePipelines();
 
             if (properties.state !== "inactive") {

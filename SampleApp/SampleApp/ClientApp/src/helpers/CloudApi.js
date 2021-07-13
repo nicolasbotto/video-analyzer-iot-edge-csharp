@@ -180,10 +180,9 @@
         }
     }
 
-    async changeStateLivePipeline(livePipeline, properties) {
+    async changeStateLivePipeline(livePipeline, action) {
         try {
             const { baseUrl, accountName, apiVersion } = this.appSettings;
-            const action = properties.state.toUpperCase() === "INACTIVE" ? "activate" : "deactivate";
 
             const url = `${baseUrl}/${accountName}/livePipelines/${livePipeline}/${action}${apiVersion}`;
             const response = await this.callApi(url, 'POST');
@@ -199,13 +198,13 @@
                         return;
                     }
                     else {
-                        const errorMessage = "Operation failed, please check the console log."
-                        throw new Error(errorMessage);
+                        const errorMessageObj = await asyncResponse.json();
+                        throw new Error(errorMessageObj.error.message);
                     }
                 }
                 else {
-                    const errorMessage = await response.text();
-                    throw new Error(errorMessage);
+                    const errorMessage = await response.json();
+                    throw new Error(errorMessage.error.message);
                 }
             }
             else {

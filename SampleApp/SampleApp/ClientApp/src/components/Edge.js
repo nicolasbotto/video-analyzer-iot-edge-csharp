@@ -2,6 +2,15 @@
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import CloudApi from '../helpers/CloudApi';
 
+//const Loader = () => (
+//    <div class="loader">
+//        Loading... <br/>
+//    <svg class="svgLoader" viewBox="0 0 100 100" width="10em" height="10em">
+//      <path stroke="none" d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50" fill="#51CACC" transform="rotate(179.719 50 51)"><animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 51;360 50 51" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite"></animateTransform></path>
+//    </svg>
+//  </div>
+//);
+
 export class Edge extends Component {
     static displayName = Edge.name;
 
@@ -29,7 +38,11 @@ export class Edge extends Component {
             connection: null,
             events: [],
             appSettings: {},
-            deviceId: ""
+            deviceId: "",
+            activeLivePipeline: "",
+            cloudLivePipelineIsActive: false,
+            cloudLivePipelines: [],
+            loading: true
         };
 
         this.token = null;
@@ -59,12 +72,24 @@ export class Edge extends Component {
             .build();
 
         connection.on("ReceivedNewEvent", (eventData) => {
-            const { events } = this.state;
-
-            events.push(eventData);
             console.log('Added event');
-
-            this.setState({ events: events});
+            this.stopToEvent();
+            const { activeLivePipeline } = this.state;
+            try {
+                // Activate Cloud LivePipeline
+                this.api.changeStateLivePipeline(activeLivePipeline, 'activate')
+                    .then(data =>
+                    {
+                        this.setState({ cloudLivePipelineIsActive: true });
+                    })
+                    .catch(err =>
+                    {
+                        throw err;
+                    })
+            }
+            catch (e) {
+                alert(e);
+            }
         });
 
         connection.start();
@@ -72,22 +97,23 @@ export class Edge extends Component {
     }
 
     async deleteLivePipelineOperation(livePipeline) {
-        const token = this.token;
+        const { cloudLivePipelines } = this.state;
         const url = `/VideoAnalyzer/LivePipelineDelete?livePipelineName=${livePipeline}`;
         try {
             const response = await fetch(url, {
-                method: 'DELETE',
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+                method: 'DELETE'
             });
 
             if (response.ok) {
                 await this.getLivePipelines();
 
-                // Delete Cloud PipelineTopology
+                // Delete Cloud LivePipeline
                 try {
                     this.api.deleteLivePipeline(livePipeline);
+                    const newCloudLivePipelines = cloudLivePipelines.filter(x => x.name != livePipeline)
+
+                    // Remove Cloud LivePipeline
+                    this.setState({ cloudLivePipelines: newCloudLivePipelines });
                 }
                 catch (cloudEx) {
                     alert(`Cannot delete the Cloud LivePipeline ${livePipeline}: ${cloudEx}`);
@@ -292,15 +318,14 @@ export class Edge extends Component {
 
     async createLivePipelineOperation(event) {
         event.preventDefault();
-        const { livePipelineName, rtspUrl, rtspUsername, rtspPassword, livePipelineTopologyName, videoName, deviceId } = this.state;
+        const { cloudLivePipelines, livePipelineName, rtspUrl, rtspUsername, rtspPassword, livePipelineTopologyName, videoName, deviceId } = this.state;
 
         const body = {
             pipelineTopologyName: livePipelineTopologyName,
             livePipelineName: livePipelineName,
             username: rtspUsername,
             password: rtspPassword,
-            url: rtspUrl,
-            videoName: videoName
+            url: rtspUrl
         };
 
         const url = '/VideoAnalyzer/LivePipelineSet';
@@ -322,6 +347,7 @@ export class Edge extends Component {
                 try {
                     const body = this.createLivePipelineBody(livePipelineTopologyName, livePipelineName, videoName, rtspUrl, rtspUsername, rtspPassword, deviceId);
                     await this.api.createLivePipeline(body);
+                    cloudLivePipelines.push(body);
                 }
                 catch (cloudEx) {
                     alert(`Cannot create the Cloud LivePipeline: ${cloudEx}`);
@@ -374,30 +400,34 @@ export class Edge extends Component {
     async changeStateLivePipelineOperation(livePipeline, state) {
         const action = state === "Inactive" ? "Activate" : "Deactivate";
         const url = `/VideoAnalyzer/LivePipeline${action}?livePipelineName=${livePipeline}`;
-        
+
         try {
             const response = await fetch(url, {
                 method: 'POST'
             });
 
             if (response.ok) {
-                await this.getLivePipelines();
+                if (action === "Activate") {
+                    this.setState({ activeLivePipeline: livePipeline }, async () => {
+                        await this.listenToEvent();
+                    });
+                }
+                else {
+                    await this.api.changeStateLivePipeline(livePipeline, 'deactivate')
+                    this.deleteVideoPlayer(livePipeline);
+                    this.setState({ activeLivePipeline: "" });
+                }
             }
             else {
                 alert("Operation failed, please check the console log.");
                 console.log(await response.text());
             }
-
-            if (action === "Deactivate") {
-                await this.stopToEvent();
-                this.setState({ events: [] });
-            }
-            else {
-                await this.listenToEvent();
-            }
         }
         catch (e) {
             console.log(e);
+        }
+        finally {
+            await this.getLivePipelines();
         }
     }
 
@@ -456,51 +486,12 @@ export class Edge extends Component {
     }
 
     async getVideoPlayback(videoName, pipelineName) {
-        const token = this.token;
-        const url = '';
-        const authUrl = '';
         try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            });
-
-            let tunneledRtspUrl = "";
-            let playbackToken = "";
-            if (response.ok) {
-                const jsonResponse = await response.json();
-                tunneledRtspUrl = jsonResponse.properties.streaming.rtspTunnelUrl;
-
-                const responseAuth = await fetch(authUrl, {
-                    method: 'POST',
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                if (responseAuth.ok) {
-                    const jsonAuthResponse = await responseAuth.json();
-                    playbackToken = jsonAuthResponse.token;
-                }
-                else {
-                    const errorMessageObj = await responseAuth.json();
-                    alert(`Cannot get video playback token: ${errorMessageObj.error.message}`);
-                }
-            }
-            else {
-                const errorMessageObj = await response.json();
-                alert(`Cannot get video playback url: ${errorMessageObj.error.message}`);
-            }
-
-            this.renderVideoPlayer(tunneledRtspUrl, playbackToken, pipelineName);
+            let response = await this.api.getVideoPlayback(videoName);
+            this.renderVideoPlayer(response.tunneledRtspUrl, response.playbackToken, pipelineName);
         }
         catch (e) {
-            console.log(e);
-        }
-        finally {
-            this.setState({ loadingLivePipelines: false });
+            alert(e);
         }
     }
 
@@ -512,11 +503,12 @@ export class Edge extends Component {
             });
 
             if (!response.ok) {
-                console.log(response.statusText);
+                const errorMessageObj = await response.json();
+                throw new Error(`Cannot listen to events: ${errorMessageObj.error.message}`);
             }
         }
         catch (e) {
-            console.log(e);
+            alert(e);
         }
     }
 
@@ -528,11 +520,12 @@ export class Edge extends Component {
             });
 
             if (!response.ok) {
-                console.log(response.statusText);
+                const errorMessageObj = await response.json();
+                throw new Error(`Cannot stop listening to events: ${errorMessageObj.error.message}`);
             }
         }
         catch (e) {
-            console.log(e);
+            alert(e);
         }
     }
 
@@ -601,9 +594,6 @@ export class Edge extends Component {
 
                 <h5>Add new</h5>
                 <form name="pipelinetopology" onSubmit={(e) => this.createPipelineTopology(e)}>
-                    {/*<fieldset>*/}
-                    {/*    <label>Behind proxy</label>&nbsp;<input type="checkbox" checked={this.state.behindProxy} name="behindProxy" onChange={(e) => this.setFormData(e)} />*/}
-                    {/*</fieldset>*/}
                     <fieldset>
                         <label>Name:</label>&nbsp;
                         <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} />
@@ -654,25 +644,28 @@ export class Edge extends Component {
                                             (
                                                 <div>
                                                     <button className="btn btn-primary" onClick={() => this.changeStateLivePipeline(data.name, data.properties.state)}>Deactivate</button><br /><br />
-                                                            <button className="btn btn-primary" onClick={() => this.getVideoPlayback(data.properties.parameters.find(x => x.name === "videoNameParameter").value, data.name)}>Play video</button>
-                                                            {/*<button className="btn btn-primary" onClick={() => this.listenToEvent()}>Listen</button><br /><br />*/}
-                                                            {/*<button className="btn btn-primary" onClick={() => this.stopToEvent()}>Stop</button>*/}
+                                                            {
+                                                                this.state.cloudLivePipelineIsActive ?
+                                                                    <button className="btn btn-primary" onClick={() => this.getVideoPlayback(this.state.cloudLivePipelines.find(x => x.name == data.name).properties.parameters.find(x => x.name === "videoNameParameter").value, data.name)}>Play video</button>
+                                                                    :
+                                                                    null
+                                                            }
                                                 </div>
                                             )
                                         }
                                     </td>
                                     </tr>
-                                    <tr>
-                                        <td colSpan="6">
-                                            <div>
-                                                <ul>
-                                                    {this.state.events.map((p, i) =>
-                                                        <li key={i}>{p}</li>
-                                                    )}
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    {/*<tr>*/}
+                                    {/*    <td colSpan="6">*/}
+                                    {/*        <div>*/}
+                                    {/*            <ul>*/}
+                                    {/*                {this.state.events.map((p, i) =>*/}
+                                    {/*                    <li key={i}>{p}</li>*/}
+                                    {/*                )}*/}
+                                    {/*            </ul>*/}
+                                    {/*        </div>*/}
+                                    {/*    </td>*/}
+                                    {/*</tr>*/}
                                     <tr>
                                         <td colSpan="6">
                                             <div>

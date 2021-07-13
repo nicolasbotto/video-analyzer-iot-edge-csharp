@@ -51,8 +51,16 @@ namespace SampleApp.Controllers
             {
                 var method = new PipelineTopologyListRequest();
                 var result = await InvokeDirectMethodHelper(method);
-                var response = DeserializeResult<List<PipelineTopology>>(result);
-                return Ok(response);
+
+                if (result.Status == 200)
+                {
+                    var response = DeserializeResult<List<PipelineTopology>>(result);
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest(result.GetPayloadAsJson());
+                }
             }
             catch (Exception ex)
             {
@@ -70,15 +78,7 @@ namespace SampleApp.Controllers
                 var method = new PipelineTopologyGetRequest(pipelineTopologyName);
                 var result = await InvokeDirectMethodHelper(method);
 
-                if (result.Status >= 200 && result.Status < 400)
-                {
-                    var response = DeserializeResult<PipelineTopology>(result);
-                    return Ok(response);
-                }
-                else
-                {
-                    return StatusCode(result.Status);
-                }    
+                return GetResponse(result);
             }
             catch (Exception ex)
             {
@@ -97,14 +97,7 @@ namespace SampleApp.Controllers
                 var method = new PipelineTopologySetRequest(pipelineTopology);
                 var result = await InvokeDirectMethodHelper(method);
 
-                if (result.Status >= 200 && result.Status < 400)
-                {
-                    return Ok(result);
-                }
-                else
-                {
-                    return BadRequest(result.GetPayloadAsJson());
-                }
+                return GetResponse(result);
             }
             catch (Exception ex)
             {
@@ -148,12 +141,17 @@ namespace SampleApp.Controllers
             {
                 var method = new LivePipelineListRequest();
                 var result = await InvokeDirectMethodHelper(method);
-                JObject response = JsonConvert.DeserializeObject<JObject>(result.GetPayloadAsJson());
 
-                var value = response.SelectToken("value");
-
-               // var response = DeserializeResult<List<LivePipeline>>(result);
-                return Ok(value.ToString());
+                if (result.Status == 200)
+                {
+                    JObject response = JsonConvert.DeserializeObject<JObject>(result.GetPayloadAsJson());
+                    var value = response.SelectToken("value");
+                    return Ok(value.ToString());
+                }
+                else 
+                {
+                    return BadRequest(result.GetPayloadAsJson());
+                }
             }
             catch (Exception ex)
             {
@@ -169,18 +167,11 @@ namespace SampleApp.Controllers
             try
             {
                 var livePipeline = Builder.BuildLivePipepine(requestPayload.LivePipelineName, requestPayload.PipelineTopologyName,
-                    requestPayload.Url, requestPayload.Username, requestPayload.Password, requestPayload.VideoName);
+                    requestPayload.Url, requestPayload.Username, requestPayload.Password);
                 var method = new LivePipelineSetRequest(livePipeline);
                 var result = await InvokeDirectMethodHelper(method);
 
-                if (result.Status >= 200 && result.Status < 400)
-                {
-                    return Ok(result);
-                }
-                else
-                {
-                    return BadRequest(result.GetPayloadAsJson());
-                }
+                return GetResponse(result);
             }
             catch (Exception ex)
             {
@@ -250,14 +241,7 @@ namespace SampleApp.Controllers
                 var method = new LivePipelineDeleteRequest(livePipelineName);
                 var result = await InvokeDirectMethodHelper(method);
 
-                if (result.Status >= 200 && result.Status < 400)
-                {
-                    return Ok(result);
-                }
-                else
-                {
-                    return BadRequest(result.GetPayloadAsJson());
-                }
+                return GetResponse(result);
             }
             catch (Exception ex)
             {
@@ -274,7 +258,8 @@ namespace SampleApp.Controllers
             {
                 var method = new LivePipelineActivateRequest(livePipelineName);
                 var result = await InvokeDirectMethodHelper(method);
-                return Ok(result);
+
+                return GetResponse(result);
             }
             catch (Exception ex)
             {
@@ -291,7 +276,8 @@ namespace SampleApp.Controllers
             {
                 var method = new LivePipelineDeactivateRequest(livePipelineName);
                 var result = await InvokeDirectMethodHelper(method);
-                return Ok(result);
+
+                return GetResponse(result);
             }
             catch (Exception ex)
             {
@@ -372,6 +358,18 @@ namespace SampleApp.Controllers
             else
                 return JsonConvert.DeserializeObject<T>(response.ToString());
 
+        }
+
+        private IActionResult GetResponse(CloudToDeviceMethodResult result)
+        {
+            if (result.Status >= 200 && result.Status < 400)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result.GetPayloadAsJson());
+            }
         }
     }
 }
