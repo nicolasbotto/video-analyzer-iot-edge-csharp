@@ -116,16 +116,16 @@ export class Edge extends Component {
                     this.setState({ cloudLivePipelines: newCloudLivePipelines });
                 }
                 catch (cloudEx) {
-                    alert(`Cannot delete the Cloud LivePipeline ${livePipeline}: ${cloudEx}`);
+                    throw new Error(`Cannot delete the Cloud LivePipeline ${livePipeline}: ${cloudEx}`);
                 }
             }
             else {
                 const errorMessageObj = JSON.parse(await response.json());
-                alert(`Cannot delete LivePipeline: ${errorMessageObj.error.message}`);
+                throw new Error(`Cannot delete LivePipeline: ${errorMessageObj.error.message}`);
             }
         }
         catch (e) {
-            console.log(e);
+            alert(e);
         }
     }
 
@@ -144,16 +144,16 @@ export class Edge extends Component {
                     this.api.deletePipelineTopology(pipelineTopologyName);
                 }
                 catch (cloudEx) {
-                    alert(`Cannot delete the Cloud PipelineTopology ${pipelineTopologyName}: ${cloudEx}`);
+                    throw new Error(`Cannot delete the Cloud PipelineTopology ${pipelineTopologyName}: ${cloudEx}`);
                 }
             }
             else {
                 const errorMessageObj = JSON.parse(await response.json());
-                alert(`Cannot delete pipelineTopology: ${errorMessageObj.error.message}`);
+                throw new Error(`Cannot delete pipelineTopology: ${errorMessageObj.error.message}`);
             }
         }
         catch (e) {
-            console.log(e);
+            alert(e);
         }
     }
 
@@ -300,16 +300,16 @@ export class Edge extends Component {
                     this.api.createPipelineTopology(body);
                 }
                 catch (cloudEx) {
-                    alert(`Cannot create the PipelineTopology: ${cloudEx}`);
+                    throw new Error(`Cannot create the PipelineTopology: ${cloudEx}`);
                 }
             }
             else {
                 const errorMessageObj = await response.json();
-                alert(`Cannot create the pipelineTopology: ${errorMessageObj.error.message}`);
+                throw new Error(`Cannot create the pipelineTopology: ${errorMessageObj.error.message}`);
             }
         }
         catch (e) {
-            console.log(e);
+            alert(e);
         }
         finally {
             this.setState({ loadingPipelineTopologies: false });
@@ -485,13 +485,19 @@ export class Edge extends Component {
         }
     }
 
-    async getVideoPlayback(videoName, pipelineName) {
+    async getVideoPlayback(pipelineName) {
         try {
-            let response = await this.api.getVideoPlayback(videoName);
-            this.renderVideoPlayer(response.tunneledRtspUrl, response.playbackToken, pipelineName);
+            const { cloudLivePipelines } = this.state;
+            const pipelineObj = cloudLivePipelines.find(x => x.name == pipelineName);
+
+            if (pipelineObj !== undefined) {
+                const videoName = pipelineObj.properties.parameters.find(x => x.name === "videoNameParameter").value;
+                let response = await this.api.getVideoPlayback(videoName);
+                this.renderVideoPlayer(response.tunneledRtspUrl, response.playbackToken, pipelineName);
+            }
         }
         catch (e) {
-            alert(e);
+            alert("Video is not available yet, please try it again.");
         }
     }
 
@@ -646,7 +652,7 @@ export class Edge extends Component {
                                                     <button className="btn btn-primary" onClick={() => this.changeStateLivePipeline(data.name, data.properties.state)}>Deactivate</button><br /><br />
                                                             {
                                                                 this.state.cloudLivePipelineIsActive ?
-                                                                    <button className="btn btn-primary" onClick={() => this.getVideoPlayback(this.state.cloudLivePipelines.find(x => x.name == data.name).properties.parameters.find(x => x.name === "videoNameParameter").value, data.name)}>Play video</button>
+                                                                    <button className="btn btn-primary" onClick={() => this.getVideoPlayback(data.name)}>Play video</button>
                                                                     :
                                                                     null
                                                             }
@@ -655,17 +661,6 @@ export class Edge extends Component {
                                         }
                                     </td>
                                     </tr>
-                                    {/*<tr>*/}
-                                    {/*    <td colSpan="6">*/}
-                                    {/*        <div>*/}
-                                    {/*            <ul>*/}
-                                    {/*                {this.state.events.map((p, i) =>*/}
-                                    {/*                    <li key={i}>{p}</li>*/}
-                                    {/*                )}*/}
-                                    {/*            </ul>*/}
-                                    {/*        </div>*/}
-                                    {/*    </td>*/}
-                                    {/*</tr>*/}
                                     <tr>
                                         <td colSpan="6">
                                             <div>
