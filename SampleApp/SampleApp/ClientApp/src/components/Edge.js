@@ -2,15 +2,6 @@
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import CloudApi from '../helpers/CloudApi';
 
-//const Loader = () => (
-//    <div class="loader">
-//        Loading... <br/>
-//    <svg class="svgLoader" viewBox="0 0 100 100" width="10em" height="10em">
-//      <path stroke="none" d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50" fill="#51CACC" transform="rotate(179.719 50 51)"><animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 51;360 50 51" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite"></animateTransform></path>
-//    </svg>
-//  </div>
-//);
-
 export class Edge extends Component {
     static displayName = Edge.name;
 
@@ -110,6 +101,15 @@ export class Edge extends Component {
                 // Delete Cloud LivePipeline
                 try {
                     this.api.deleteLivePipeline(livePipeline);
+
+                    // Delete Video
+                    const pipelineObj = cloudLivePipelines.find(x => x.name == livePipeline);
+
+                    if (pipelineObj !== undefined) {
+                        const videoName = pipelineObj.properties.parameters.find(x => x.name === "videoNameParameter").value;
+                        this.api.deleteVideo(videoName);
+                    }
+
                     const newCloudLivePipelines = cloudLivePipelines.filter(x => x.name != livePipeline)
 
                     // Remove Cloud LivePipeline
