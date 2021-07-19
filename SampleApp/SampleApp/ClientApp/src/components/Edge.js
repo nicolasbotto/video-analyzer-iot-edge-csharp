@@ -466,17 +466,19 @@ export class Edge extends Component {
                 method: 'GET'
             });
 
-            var data = [];
+            let data, cloudLivePipelines = [];
+            
 
             if (response.ok) {
                 const jsonResponse = await response.json();
                 data = JSON.parse(jsonResponse);
+                cloudLivePipelines = await this.api.getLivePipelines();
             }
             else {
                 console.log(response.statusText);
             }
 
-            this.setState({ livePipelines: data });
+            this.setState({ livePipelines: data, cloudLivePipelines: cloudLivePipelines });
         }
         catch (e) {
             console.log(e);
