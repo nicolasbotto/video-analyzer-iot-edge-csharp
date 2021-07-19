@@ -149,7 +149,8 @@ export class Edge extends Component {
             }
             else {
                 const errorMessageObj = JSON.parse(await response.json());
-                throw new Error(`Cannot delete pipelineTopology: ${errorMessageObj.error.message}`);
+                const errorMessage = errorMessageObj.error.details.map(x => x.message);
+                throw new Error(`Cannot delete pipelineTopology: ${errorMessage}`);
             }
         }
         catch (e) {
@@ -597,15 +598,21 @@ export class Edge extends Component {
                             )}
                     </tbody>
                 </table>
-
-                <h5>Add new</h5>
-                <form name="pipelinetopology" onSubmit={(e) => this.createPipelineTopology(e)}>
-                    <fieldset>
-                        <label>Name:</label>&nbsp;
-                        <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} />
-                    </fieldset>
-                    <button type="submit" disabled={!this.state.pipelineTopologiesEnabled}>Create</button>
-                </form>
+                {
+                    pipelineTopologies.length == 0 ?
+                        <div>
+                            <h5>Add new</h5>
+                            <form name="pipelinetopology" onSubmit={(e) => this.createPipelineTopology(e)}>
+                                <fieldset>
+                                    <label>Name:</label>&nbsp;
+                                    <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} />
+                                </fieldset>
+                                <button type="submit" disabled={!this.state.pipelineTopologiesEnabled}>Create</button>
+                            </form>
+                        </div>
+                    :
+                    null
+                }
             </div>
         );
     }
