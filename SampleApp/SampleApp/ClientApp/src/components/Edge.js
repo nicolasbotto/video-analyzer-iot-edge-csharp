@@ -567,7 +567,7 @@ export class Edge extends Component {
         const { pipelineTopologies } = this.state;
         return (
             <div>
-                <h3>Pipeline Topologies</h3>
+                <h3>Edge Pipeline Topologies</h3>
                 <table className='table table-striped' aria-labelledby="tabelLabel">
                     <thead>
                         <tr>
@@ -614,7 +614,7 @@ export class Edge extends Component {
         const { livePipelines } = this.state;
         return (
             <div>
-                <h3>LivePipelines</h3>
+                <h3>Edge Live Pipelines</h3>
                 <table className='table table-striped' aria-labelledby="tabelLabel">
                     <tbody>
                         {
@@ -746,17 +746,16 @@ export class Edge extends Component {
 
     render() {
         let pipelineTopologies = this.state.loadingPipelineTopologies
-            ? <p><em>Loading PipelineTopologies... </em></p>
+            ? <p><em>Loading Edge Pipeline Topologies... </em></p>
             : this.renderPipelineTopologies();
 
         let livePipelines = this.state.loadingPipelineTopologies && this.state.loadingLivePipelines
-            ? <p><em>Loading LivePipelines...</em></p>
+            ? <p><em>Loading Edge Live Pipelines...</em></p>
             : this.renderLivePipelines();
 
         return (
             <div>
                 <h1 id="tabelLabel" >Edge Devices</h1>
-                <p>This component demonstrates fetching Video Analyzers.</p>
                 {pipelineTopologies}
                 <hr />
                 <br />

@@ -4,6 +4,12 @@
   word-break: break-all;
 }
 
+.active {
+    font-style: italic;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
 html {
   font-size: 14px;
 }

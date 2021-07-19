@@ -388,7 +388,7 @@ export class Cloud extends Component {
         const { pipelineTopologies } = this.state;
         return (
             <div>
-                <h3>Pipeline Topologies</h3>
+                <h3>Cloud Pipeline Topologies</h3>
                 <table className='table table-striped' aria-labelledby="tabelLabel">
                     <thead>
                         <tr>
@@ -438,7 +438,7 @@ export class Cloud extends Component {
         const { livePipelines } = this.state;
         return (
             <div>
-                <h3>LivePipelines</h3>
+                <h3>Cloud Live Pipelines</h3>
                 <table className='table table-striped' aria-labelledby="tabelLabel">
                     <tbody>
                         {
@@ -574,11 +574,11 @@ export class Cloud extends Component {
             : this.renderVideoAnalyzers();
 
         let pipelineTopologies = this.state.loadingPipelineTopologies
-            ? <p><em>Loading PipelineTopologies... </em></p>
+            ? <p><em>Loading Cloud Pipeline Topologies... </em></p>
             : this.renderPipelineTopologies();
 
         let livePipelines = this.state.loadingPipelineTopologies && this.state.loadingLivePipelines
-            ? <p><em>Loading LivePipelines...</em></p>
+            ? <p><em>Loading Cloud Live Pipelines...</em></p>
             : this.renderLivePipelines();
 
         return (
