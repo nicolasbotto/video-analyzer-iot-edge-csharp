@@ -588,7 +588,7 @@ export class Edge extends Component {
                                     <td>{data.properties.description}</td>
                                     <td>
                                         <ul>
-                                            {data.properties.parameters.map((p,i) =>
+                                            {data.properties.parameters.filter(x => x.name.includes("rtsp")).map((p,i) =>
                                                 <li key={i}>{p.name}</li>
                                             )}
                                         </ul>
