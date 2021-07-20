@@ -25,6 +25,8 @@ export class Cloud extends Component {
             rtspUsername: "",
             rtspPassword: "",
             deviceId: "",
+            videoTitle: "",
+            videoDescription: "",
             livePipelineTopologyName: "",
             livePipelineState: "inactive",
             livePipelineEnabled: false,
@@ -120,6 +122,18 @@ export class Cloud extends Component {
                         "name": "videoNameParameter",
                         "type": "String",
                         "description": "video name parameter"
+                    },
+                    {
+                        "name": "videoTitleParameter",
+                        "type": "String",
+                        "description": "video title parameter",
+                        "default": "Sample Video Title"
+                    },
+                    {
+                        "name": "videoDescriptionParameter",
+                        "type": "String",
+                        "description": "video Description parameter",
+                        "default": "Sample Video Description"
                     }
                 ],
                 "sources": [
@@ -144,8 +158,8 @@ export class Cloud extends Component {
                         "name": "videoSink",
                         "videoName": "${videoNameParameter}",
                         "videoCreationProperties": {
-                            "title": "Sample Video",
-                            "description": "Sample Video",
+                            "title": "${videoTitleParameter}",
+                            "description": "${videoDescriptionParameter}",
                             "segmentLength": "PT30S"
                         },
                         "inputs": [
@@ -196,7 +210,7 @@ export class Cloud extends Component {
 
     async createLivePipelineOperation(event) {
         event.preventDefault();
-        const { livePipelineName, rtspUrl, rtspUsername, rtspPassword, livePipelineTopologyName, videoName, deviceId, showDeviceId } = this.state;
+        const { livePipelineName, rtspUrl, rtspUsername, rtspPassword, livePipelineTopologyName, videoName, deviceId, showDeviceId, videoTitle, videoDescription } = this.state;
 
         let body = {
             "name": livePipelineName,
@@ -220,6 +234,14 @@ export class Cloud extends Component {
                     {
                         "name": "videoNameParameter",
                         "value": videoName
+                    },
+                    {
+                        "name": "videoTitleParameter",
+                        "value": videoTitle
+                    },
+                    {
+                        "name": "videoDescriptionParameter",
+                        "value": videoDescription
                     }
                 ]
             }
@@ -236,7 +258,7 @@ export class Cloud extends Component {
 
         try {
             await this.api.createLivePipeline(body);
-            this.setState({ livePipelineName: "", rtspUrl: "", rtspUsername: "", rtspPassword: "", livePipelineTopologyName: "", videoName: "" },
+            this.setState({ livePipelineName: "", rtspUrl: "", rtspUsername: "", rtspPassword: "", livePipelineTopologyName: "", videoName: "", videoTitle: "", videoDescription: ""  },
                 async () => await this.getLivePipelines());
         }
         catch (e) {
@@ -426,7 +448,7 @@ export class Cloud extends Component {
                     </fieldset>
                     <fieldset>
                         <label>Name:</label>&nbsp;
-                        <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} />
+                        <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input" />
                     </fieldset>
                     <button type="submit" disabled={!this.state.pipelineTopologiesEnabled}>Create</button>
                 </form>
@@ -498,7 +520,7 @@ export class Cloud extends Component {
                 <form name="livepipeline" onSubmit={(e) => this.createLivePipeline(e)}>
                     <fieldset >
                         <label>Topology Name:</label>&nbsp;
-                         <select name="livePipelineTopologyName" value={this.state.livePipelineTopologyName} onChange={(e) => this.setFormData(e)}>
+                         <select name="livePipelineTopologyName" value={this.state.livePipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input">
                             <option value="">Select:</option>
                             {
                                 this.state.pipelineTopologies.map((item, index) =>
@@ -509,29 +531,37 @@ export class Cloud extends Component {
                     </fieldset>
                     <fieldset>
                         <label>Name:</label>&nbsp;
-                        <input name="livePipelineName" value={this.state.livePipelineName} onChange={(e) => this.setFormData(e)} />
+                        <input name="livePipelineName" value={this.state.livePipelineName} onChange={(e) => this.setFormData(e)} className="input" />
                     </fieldset>
                     <fieldset >
                         <label>rtsp Url:</label>&nbsp;
-                        <input name="rtspUrl" value={this.state.rtspUrl} onChange={(e) => this.setFormData(e)} placeholder="rtsp://rtspsim:554/media/lots_015.mkv"/>
+                        <input name="rtspUrl" value={this.state.rtspUrl} onChange={(e) => this.setFormData(e)} placeholder="rtsp://rtspsim:554/media/lots_015.mkv" className="input" />
                     </fieldset>
                     <fieldset >
                         <label>rtsp Username:</label>&nbsp;
-                        <input name="rtspUsername" value={this.state.rtspUsername} onChange={(e) => this.setFormData(e)} placeholder="username"/>
+                        <input name="rtspUsername" value={this.state.rtspUsername} onChange={(e) => this.setFormData(e)} placeholder="username" className="input" />
                     </fieldset>
                     <fieldset >
                         <label>rtsp Password:</label>&nbsp;
-                        <input type="password" name="rtspPassword" value={this.state.rtspPassword} onChange={(e) => this.setFormData(e)} placeholder="*******"/>
+                        <input type="password" name="rtspPassword" value={this.state.rtspPassword} onChange={(e) => this.setFormData(e)} placeholder="*******" className="input" />
                     </fieldset>
                     <fieldset >
                         <label>Video Name:</label>&nbsp;
-                        <input name="videoName" value={this.state.videoName} onChange={(e) => this.setFormData(e)} placeholder="SampleVideo" />
+                        <input name="videoName" value={this.state.videoName} onChange={(e) => this.setFormData(e)} placeholder="SampleVideo" className="input" />
+                    </fieldset>
+                    <fieldset >
+                        <label>Video Description:</label>&nbsp;
+                        <input name="videoDescription" value={this.state.videoDescription} onChange={(e) => this.setFormData(e)} placeholder="Sample video description" className="input" />
+                    </fieldset>
+                    <fieldset >
+                        <label>Video Title:</label>&nbsp;
+                        <input name="videoTitle" value={this.state.videoTitle} onChange={(e) => this.setFormData(e)} placeholder="Sample video title" className="input" />
                     </fieldset>
                     {
                         this.state.showDeviceId ?
                         <fieldset>
                             <label>Device Id:</label>&nbsp;
-                        <input name="deviceId" value={this.state.deviceId} onChange={(e) => this.setFormData(e)} placeholder="Camera01" />
+                        <input name="deviceId" value={this.state.deviceId} onChange={(e) => this.setFormData(e)} placeholder="Camera01" className="input" />
                             </fieldset>
                             :
                             null
@@ -556,6 +586,9 @@ export class Cloud extends Component {
             player.authorizationToken = authorizationToken;
             let videoRootContainer = document.getElementById("videoRootContainer" + pipelineName);
             videoRootContainer.append(player);
+
+            // Set controls
+            document.querySelector('lva-rtsp-player').shadowRoot.querySelector('video').controls = true;
         }
 
         createVideo(videoId++, wsHost, websocketToken);

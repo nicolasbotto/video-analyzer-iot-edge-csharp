@@ -225,8 +225,8 @@ export class Edge extends Component {
                         "name": "videoSink",
                         "videoName": "${videoNameParameter}",
                         "videoCreationProperties": {
-                            "title": "Sample Video",
-                            "description": "Sample Video",
+                            "title": "Video title",
+                            "description": "Video description",
                             "segmentLength": "PT30S"
                         },
                         "inputs": [
@@ -341,7 +341,7 @@ export class Edge extends Component {
             });
 
             if (response.ok) {
-                this.setState({ livePipelineName: "", rtspUrl: "", rtspUsername: "", rtspPassword: "", livePipelineTopologyName: "", videoName: "", deviceId: "" },
+                this.setState({ livePipelineName: "", rtspUrl: "", rtspUsername: "", rtspPassword: "", livePipelineTopologyName: "", videoName: "", deviceId: ""},
                     async () => await this.getLivePipelines());
 
                 // Create Cloud LivePipeline
@@ -607,7 +607,7 @@ export class Edge extends Component {
                             <form name="pipelinetopology" onSubmit={(e) => this.createPipelineTopology(e)}>
                                 <fieldset>
                                     <label>Name:</label>&nbsp;
-                                    <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} />
+                                    <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input" />
                                 </fieldset>
                                 <button type="submit" disabled={!this.state.pipelineTopologiesEnabled}>Create</button>
                             </form>
@@ -658,10 +658,13 @@ export class Edge extends Component {
                                             :
                                             (
                                                 <div>
-                                                    <button className="btn btn-primary" onClick={() => this.changeStateLivePipeline(data.name, data.properties.state)}>Deactivate</button><br /><br />
+                                                            <button className="btn btn-primary" onClick={() => this.changeStateLivePipeline(data.name, data.properties.state)}>Deactivate</button><br /><br />
                                                             {
                                                                 this.state.cloudLivePipelineIsActive ?
-                                                                    <button className="btn btn-primary" onClick={() => this.getVideoPlayback(data.name)}>Play video</button>
+                                                                    <div>
+                                                                        <button className="btn btn-primary" onClick={() => this.getVideoPlayback(data.name)}>Monitor camera output</button>
+                                                                        <img src="/information.png" className="icon" title="View a low latency RTSP feed from the camera relayed via AVA" />
+                                                                    </div>
                                                                     :
                                                                     null
                                                             }
@@ -688,7 +691,7 @@ export class Edge extends Component {
                 <form name="livepipeline" onSubmit={(e) => this.createLivePipeline(e)}>
                     <fieldset >
                         <label>Topology Name:</label>&nbsp;
-                         <select name="livePipelineTopologyName" value={this.state.livePipelineTopologyName} onChange={(e) => this.setFormData(e)}>
+                         <select name="livePipelineTopologyName" value={this.state.livePipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input">
                             <option value="">Select:</option>
                             {
                                 this.state.pipelineTopologies.map((item, index) =>
@@ -699,27 +702,27 @@ export class Edge extends Component {
                     </fieldset>
                     <fieldset>
                         <label>Name:</label>&nbsp;
-                        <input name="livePipelineName" value={this.state.livePipelineName} onChange={(e) => this.setFormData(e)} />
+                        <input name="livePipelineName" value={this.state.livePipelineName} onChange={(e) => this.setFormData(e)} className="input"/>
                     </fieldset>
                     <fieldset >
                         <label>rtsp Url:</label>&nbsp;
-                        <input name="rtspUrl" value={this.state.rtspUrl} onChange={(e) => this.setFormData(e)} placeholder="rtsp://rtspsim:554/media/lots_015.mkv"/>
+                        <input name="rtspUrl" value={this.state.rtspUrl} onChange={(e) => this.setFormData(e)} placeholder="rtsp://rtspsim:554/media/lots_015.mkv" className="input"/>
                     </fieldset>
                     <fieldset >
                         <label>rtsp Username:</label>&nbsp;
-                        <input name="rtspUsername" value={this.state.rtspUsername} onChange={(e) => this.setFormData(e)} placeholder="username"/>
+                        <input name="rtspUsername" value={this.state.rtspUsername} onChange={(e) => this.setFormData(e)} placeholder="username" className="input"/>
                     </fieldset>
                     <fieldset >
                         <label>rtsp Password:</label>&nbsp;
-                        <input type="password" name="rtspPassword" value={this.state.rtspPassword} onChange={(e) => this.setFormData(e)} placeholder="*******"/>
+                        <input type="password" name="rtspPassword" value={this.state.rtspPassword} onChange={(e) => this.setFormData(e)} placeholder="*******" className="input"/>
                     </fieldset>
                     <fieldset >
                         <label>Video Name:</label>&nbsp;
-                        <input name="videoName" value={this.state.videoName} onChange={(e) => this.setFormData(e)} placeholder="SampleVideo" />
+                        <input name="videoName" value={this.state.videoName} onChange={(e) => this.setFormData(e)} placeholder="SampleVideo" className="input"/>
                     </fieldset>
                     <fieldset >
                         <label>Device Id:</label>&nbsp;
-                        <input name="deviceId" value={this.state.deviceId} onChange={(e) => this.setFormData(e)} placeholder="Camera1" />
+                        <input name="deviceId" value={this.state.deviceId} onChange={(e) => this.setFormData(e)} placeholder="Camera1" className="input" />
                     </fieldset>
                     <button type="submit" disabled={!this.state.livePipelineEnabled}>Create</button>
                 </form>
@@ -741,6 +744,9 @@ export class Edge extends Component {
             player.authorizationToken = authorizationToken;
             let videoRootContainer = document.getElementById("videoRootContainer" + pipelineName);
             videoRootContainer.append(player);
+
+            // Set controls
+            document.querySelector('lva-rtsp-player').shadowRoot.querySelector('video').controls = true;
         }
 
         createVideo(videoId++, wsHost, websocketToken);
