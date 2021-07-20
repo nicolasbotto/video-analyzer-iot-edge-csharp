@@ -603,7 +603,8 @@ export class Edge extends Component {
                 {
                     pipelineTopologies.length == 0 ?
                         <div>
-                            <h5>Add new</h5>
+                            <h5>Create a HTTP inferencing topology using YOLOv3-based inference server</h5>
+                            See <a href="https://github.com/Azure/video-analyzer/tree/main/pipelines/live/topologies/httpExtension" title="See pipeline topology">Pipeline Topology</a>
                             <form name="pipelinetopology" onSubmit={(e) => this.createPipelineTopology(e)}>
                                 <fieldset>
                                     <label>Name:</label>&nbsp;
