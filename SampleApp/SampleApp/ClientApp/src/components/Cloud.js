@@ -382,27 +382,30 @@ export class Cloud extends Component {
     renderVideoAnalyzers() {
         const { videoAnalyzers } = this.state;
         return (
-            <table className='table table-striped' aria-labelledby="tabelLabel">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Id</th>
-                        <th>Location</th>
-                        <th>Type</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {
-                        videoAnalyzers.map((data, index) =>
-                            <tr key={index}>
-                                <td>{data.name}</td>
-                                <td>{data.id}</td>
-                                <td>{data.location}</td>
-                                <td>{data.type}</td>
-                            </tr>
-                        )}
-                </tbody>
-            </table>
+            <div>
+                <h3>Video Analyzers</h3>
+                <table className='table table-striped' aria-labelledby="tabelLabel">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Id</th>
+                            <th>Location</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            videoAnalyzers.map((data, index) =>
+                                <tr key={index}>
+                                    <td>{data.name}</td>
+                                    <td>{data.id}</td>
+                                    <td>{data.location}</td>
+                                    <td>{data.type}</td>
+                                </tr>
+                            )}
+                    </tbody>
+                </table>
+            </div>
         );
     }
 
@@ -616,7 +619,7 @@ export class Cloud extends Component {
 
         return (
             <div>
-                <h1 id="tabelLabel" >Video Analyzers</h1>
+                <h1 id="tabelLabel" >Cloud</h1>
                 <p>This component demonstrates fetching Video Analyzers.</p>
                 {videoAnalyzers}
                 <hr />

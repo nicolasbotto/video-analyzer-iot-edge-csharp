@@ -661,13 +661,12 @@ export class Edge extends Component {
                                                 <div>
                                                             <button className="btn btn-primary" onClick={() => this.changeStateLivePipeline(data.name, data.properties.state)}>Deactivate</button><br /><br />
                                                             {
-                                                                this.state.cloudLivePipelineIsActive ?
+                                                                
                                                                     <div>
                                                                         <button className="btn btn-primary" onClick={() => this.getVideoPlayback(data.name)}>Monitor camera output</button>
                                                                         <img src="/information.png" className="icon" title="View a low latency RTSP feed from the camera relayed via AVA" />
                                                                     </div>
-                                                                    :
-                                                                    null
+                                                                   
                                                             }
                                                 </div>
                                             )
@@ -771,7 +770,7 @@ export class Edge extends Component {
 
         return (
             <div>
-                <h1 id="tabelLabel" >Edge Devices</h1>
+                <h1 id="tabelLabel" >Edge Device</h1>
                 {pipelineTopologies}
                 <hr />
                 <br />

@@ -12,8 +12,8 @@ export default class App extends Component {
   render () {
     return (
       <Layout>
-            <Route exact path='/' component={Cloud} />
-            <Route exact path='/edge' component={Edge} />
+            <Route exact path='/' component={Edge} />
+            <Route exact path='/cloud' component={Cloud} />
       </Layout>
     );
   }
