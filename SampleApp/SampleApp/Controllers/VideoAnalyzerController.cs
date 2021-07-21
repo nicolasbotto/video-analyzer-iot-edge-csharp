@@ -289,16 +289,20 @@ namespace SampleApp.Controllers
 
 
         [HttpGet]
-        public IActionResult StopListeningToEvents()
+        public IActionResult StopListeningToEvents([FromQuery] string livePipelineName)
         {
-            AppConstants.TokenSource.Cancel();
+            if (AppConstants.TokenSource.ContainsKey(livePipelineName))
+            {
+                AppConstants.TokenSource[livePipelineName].Cancel();
+            }
+
             return StatusCode(204);
         }
 
         [HttpGet]
-        public async Task<IActionResult> ListenToEvents()
+        public async Task<IActionResult> ListenToEvents([FromQuery] string livePipelineName)
         {
-            AppConstants.TokenSource = new CancellationTokenSource();
+            AppConstants.TokenSource[livePipelineName] = new CancellationTokenSource();
             var consumerGroup = EventHubConsumerClient.DefaultConsumerGroupName;
 
             var consumer = new EventHubConsumerClient(
@@ -308,16 +312,23 @@ namespace SampleApp.Controllers
 
             try
             {
-                string firstPartition = (await consumer.GetPartitionIdsAsync(AppConstants.TokenSource.Token)).Last();
-                PartitionProperties properties = await consumer.GetPartitionPropertiesAsync(firstPartition, AppConstants.TokenSource.Token);
+                string firstPartition = (await consumer.GetPartitionIdsAsync(AppConstants.TokenSource[livePipelineName].Token)).Last();
+                PartitionProperties properties = await consumer.GetPartitionPropertiesAsync(firstPartition, AppConstants.TokenSource[livePipelineName].Token);
                 EventPosition startingPosition = EventPosition.FromSequenceNumber(properties.LastEnqueuedSequenceNumber);
+                var firstEvent = true;
 
                 await foreach (PartitionEvent partitionEvent in consumer.ReadEventsFromPartitionAsync(
                     firstPartition,
                     startingPosition,
-                    AppConstants.TokenSource.Token))
+                    AppConstants.TokenSource[livePipelineName].Token))
                 {
-                    await EventHub.Clients.All.SendAsync("ReceivedNewEvent", partitionEvent.Data.EventBody.ToString());
+                    if (firstEvent)
+                    {
+                        firstEvent = false;
+                        await EventHub.Clients.All.SendAsync("InitVideo", livePipelineName);
+                    }
+                    
+                    await EventHub.Clients.All.SendAsync("ReceivedNewEvent", partitionEvent.Data.EventBody.ToString(), livePipelineName);
                 }
                 return StatusCode(204);
             }

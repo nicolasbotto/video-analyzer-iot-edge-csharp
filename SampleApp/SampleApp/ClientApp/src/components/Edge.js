@@ -27,11 +27,10 @@ export class Edge extends Component {
             livePipelineEnabled: false,
             pipelineTopologiesEnabled: false,
             connection: null,
-            events: [],
+            events: {},
             appSettings: {},
             deviceId: "",
             activeLivePipeline: "",
-            cloudLivePipelineIsActive: false,
             cloudLivePipelines: [],
             loading: true
         };
@@ -62,24 +61,33 @@ export class Edge extends Component {
             .configureLogging(LogLevel.Error)
             .build();
 
-        connection.on("ReceivedNewEvent", (eventData) => {
+        connection.on("ReceivedNewEvent", (eventData, pipelineName) => {
             console.log('Added event');
-            this.stopToEvent();
-            const { activeLivePipeline } = this.state;
+            const { events } = this.state;
+
+            let updatedEvents = { ...events };
+
+            if (events[pipelineName] === undefined) {
+                let newEvent = { [pipelineName]: [] };
+                updatedEvents = { ...updatedEvents, ...newEvent };
+            }
+
+            updatedEvents[pipelineName].push(eventData);
+
+            this.setState({ events: updatedEvents });
+        });
+
+        connection.on("InitVideo", (livePipelineName) => {
+            console.log('Init video');
             try {
                 // Activate Cloud LivePipeline
-                this.api.changeStateLivePipeline(activeLivePipeline, 'activate')
-                    .then(data =>
-                    {
-                        this.setState({ cloudLivePipelineIsActive: true });
-                    })
-                    .catch(err =>
-                    {
+                this.api.changeStateLivePipeline(livePipelineName, 'activate')
+                    .catch(err => {
                         throw err;
                     })
             }
             catch (e) {
-                alert(e);
+                alert(`Error initializing video: ${e}`);
             }
         });
 
@@ -410,10 +418,11 @@ export class Edge extends Component {
             if (response.ok) {
                 if (action === "Activate") {
                     this.setState({ activeLivePipeline: livePipeline }, async () => {
-                        await this.listenToEvent();
+                        await this.listenToEvent(livePipeline);
                     });
                 }
                 else {
+                    await this.stopToEvent(livePipeline);
                     await this.api.changeStateLivePipeline(livePipeline, 'deactivate')
                     this.deleteVideoPlayer(livePipeline);
                     this.setState({ activeLivePipeline: "" });
@@ -478,7 +487,13 @@ export class Edge extends Component {
                 console.log(response.statusText);
             }
 
-            this.setState({ livePipelines: data, cloudLivePipelines: cloudLivePipelines });
+            this.setState({ livePipelines: data, cloudLivePipelines: cloudLivePipelines }, async () => {
+                data.forEach(async(pipeline) => {
+                    if (pipeline.properties.state.toLowerCase() === "active") {
+                        await this.getVideoPlayback(pipeline.name);
+                    }
+                })
+            });
         }
         catch (e) {
             console.log(e);
@@ -496,7 +511,9 @@ export class Edge extends Component {
             if (pipelineObj !== undefined) {
                 const videoName = pipelineObj.properties.parameters.find(x => x.name === "videoNameParameter").value;
                 let response = await this.api.getVideoPlayback(videoName);
-                this.renderVideoPlayer(response.tunneledRtspUrl, response.playbackToken, pipelineName);
+                if (response.tunneledRtspUrl !== undefined) {
+                    this.renderVideoPlayer(response.tunneledRtspUrl, response.playbackToken, pipelineName);
+                }
             }
         }
         catch (e) {
@@ -504,8 +521,8 @@ export class Edge extends Component {
         }
     }
 
-    async listenToEvent() {
-        const url = '/VideoAnalyzer/ListenToEvents';
+    async listenToEvent(livePipelineName) {
+        const url = `/VideoAnalyzer/ListenToEvents?livePipelineName=${livePipelineName}`;
         try {
             const response = await fetch(url, {
                 method: 'GET'
@@ -521,8 +538,9 @@ export class Edge extends Component {
         }
     }
 
-    async stopToEvent() {
-        const url = '/VideoAnalyzer/StopListeningToEvents';
+    async stopToEvent(pipelineName) {
+        const url = `/VideoAnalyzer/StopListeningToEvents?livePipelineName=${pipelineName}`;
+        const { events } = this.state;
         try {
             const response = await fetch(url, {
                 method: 'GET'
@@ -532,6 +550,15 @@ export class Edge extends Component {
                 const errorMessageObj = await response.json();
                 throw new Error(`Cannot stop listening to events: ${errorMessageObj.error.message}`);
             }
+
+            let updatedEvents = { ...events };
+
+            if (updatedEvents[pipelineName] !== undefined) {
+                let newEvent = { [pipelineName]: [] };
+                updatedEvents = { ...updatedEvents, ...newEvent };
+            }
+
+            this.setState({ events: updatedEvents });
         }
         catch (e) {
             alert(e);
@@ -659,15 +686,15 @@ export class Edge extends Component {
                                             :
                                             (
                                                 <div>
-                                                            <button className="btn btn-primary" onClick={() => this.changeStateLivePipeline(data.name, data.properties.state)}>Deactivate</button><br /><br />
-                                                            {
+                                                    <button className="btn btn-primary" onClick={() => this.changeStateLivePipeline(data.name, data.properties.state)}>Deactivate</button><br /><br />
+                                                    {
                                                                 
-                                                                    <div>
-                                                                        <button className="btn btn-primary" onClick={() => this.getVideoPlayback(data.name)}>Monitor camera output</button>
-                                                                        <img src="/information.png" className="icon" title="View a low latency RTSP feed from the camera relayed via AVA" />
-                                                                    </div>
+                                                            <div>
+                                                                <button className="btn btn-primary" onClick={() => this.getVideoPlayback(data.name)}>Monitor camera output</button>
+                                                                <img src="/information.png" className="icon" title="View a low latency RTSP feed from the camera relayed via AVA" />
+                                                            </div>
                                                                    
-                                                            }
+                                                    }
                                                 </div>
                                             )
                                         }
@@ -680,6 +707,24 @@ export class Edge extends Component {
                                                     {/*lva-rtsp-player instances will be added here*/}
                                                 </div>
                                             </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colSpan="6">
+                                            {
+                                                (this.state.events[data.name] !== undefined && this.state.events[data.name].length > 0) ?
+                                                    <div><h4>Events</h4>
+                                                        <div className="events">
+                                                            <ul>
+                                                                {this.state.events[data.name].map((p, i) =>
+                                                                    <li key={i}>{p}</li>
+                                                                )}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                :
+                                                null
+                                            }
                                         </td>
                                     </tr>
                                     <tr><td colSpan="6"></td></tr>
@@ -732,6 +777,11 @@ export class Edge extends Component {
 
     renderVideoPlayer(wsHost, websocketToken, pipelineName) {
         let videoId = 0;
+
+        const container = document.getElementById("videoRootContainer" + pipelineName);
+        if (container !== undefined && container.childElementCount > 0) {
+            return;
+        }
 
         // Dynamically create and add instances of lva-rtsp-player based on input fields. A dummy value for rtspUri is required.
         const createVideo = (id, webSocketUri, authorizationToken) => {

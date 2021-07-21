@@ -8,6 +8,12 @@ namespace SampleApp.Helpers
 {
     public static class AppConstants
     {
-        public static CancellationTokenSource TokenSource { get; set; }
+        private static Dictionary<string, CancellationTokenSource> tokens = new Dictionary<string, CancellationTokenSource>();
+        public static Dictionary<string, CancellationTokenSource> TokenSource { 
+            get 
+            { 
+                return tokens; 
+            } 
+        }
     }
 }
