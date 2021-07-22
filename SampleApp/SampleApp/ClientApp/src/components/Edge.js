@@ -4,6 +4,7 @@ import CloudApi from '../helpers/CloudApi';
 
 export class Edge extends Component {
     static displayName = Edge.name;
+    static numberOfEvents = 10;
 
     constructor(props) {
         super(props);
@@ -74,7 +75,11 @@ export class Edge extends Component {
 
             updatedEvents[pipelineName].push(eventData);
 
-            this.setState({ events: updatedEvents });
+            this.setState({ events: updatedEvents }, async () => {
+                if (updatedEvents[pipelineName].length == Edge.numberOfEvents) {
+                    await this.stopToEvent(pipelineName);
+                }
+            });
         });
 
         connection.on("InitVideo", (livePipelineName) => {
@@ -409,6 +414,7 @@ export class Edge extends Component {
     async changeStateLivePipelineOperation(livePipeline, state) {
         const action = state === "Inactive" ? "Activate" : "Deactivate";
         const url = `/VideoAnalyzer/LivePipeline${action}?livePipelineName=${livePipeline}`;
+        const { events } = this.state;
 
         try {
             const response = await fetch(url, {
@@ -425,7 +431,16 @@ export class Edge extends Component {
                     await this.stopToEvent(livePipeline);
                     await this.api.changeStateLivePipeline(livePipeline, 'deactivate')
                     this.deleteVideoPlayer(livePipeline);
-                    this.setState({ activeLivePipeline: "" });
+
+                    // Clear events
+                    let updatedEvents = { ...events };
+
+                    if (updatedEvents[livePipeline] !== undefined) {
+                        let newEvent = { [livePipeline]: [] };
+                        updatedEvents = { ...updatedEvents, ...newEvent };
+                    }
+
+                    this.setState({ activeLivePipeline: "", events: updatedEvents });
                 }
             }
             else {
@@ -550,15 +565,6 @@ export class Edge extends Component {
                 const errorMessageObj = await response.json();
                 throw new Error(`Cannot stop listening to events: ${errorMessageObj.error.message}`);
             }
-
-            let updatedEvents = { ...events };
-
-            if (updatedEvents[pipelineName] !== undefined) {
-                let newEvent = { [pipelineName]: [] };
-                updatedEvents = { ...updatedEvents, ...newEvent };
-            }
-
-            this.setState({ events: updatedEvents });
         }
         catch (e) {
             alert(e);
