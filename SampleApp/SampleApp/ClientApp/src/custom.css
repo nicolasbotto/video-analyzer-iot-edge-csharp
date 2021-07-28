@@ -27,3 +27,23 @@ code {
     overflow-y: scroll;
     font-size: 12px;
 }
+
+.div-table {
+    display: table;
+    width: 100%;
+    border-spacing: 5px; /* cellspacing:poor IE support for  this */
+}
+
+.div-table-row {
+    display: table-row;
+    width: 100%;
+    height: 30px;
+    clear: both;
+}
+
+.div-table-col {
+    float: left; /* fix for  buggy browsers */
+    display: table-column;
+    width: 50%;
+    text-align: left;
+}

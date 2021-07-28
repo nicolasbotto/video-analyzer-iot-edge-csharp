@@ -3,18 +3,20 @@ import { Route } from 'react-router';
 import { Layout } from './components/Layout';
 import { Cloud } from './components/Cloud';
 import { Edge } from './components/Edge';
+import { Demo } from './components/Demo'
 
 import './custom.css'
 
 export default class App extends Component {
   static displayName = App.name;
 
-  render () {
-    return (
-      <Layout>
+    render () {
+        return (
+        <Layout>
             <Route exact path='/' component={Edge} />
             <Route exact path='/cloud' component={Cloud} />
-      </Layout>
+            <Route exact path='/demo' component={Demo}/>
+        </Layout>
     );
   }
 }

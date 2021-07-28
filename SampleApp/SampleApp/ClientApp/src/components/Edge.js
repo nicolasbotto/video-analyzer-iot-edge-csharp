@@ -490,7 +490,8 @@ export class Edge extends Component {
                 method: 'GET'
             });
 
-            let data, cloudLivePipelines = [];
+            let data = [];
+            let cloudLivePipelines = [];
             
 
             if (response.ok) {
