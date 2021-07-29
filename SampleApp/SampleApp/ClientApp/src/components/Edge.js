@@ -354,7 +354,7 @@ export class Edge extends Component {
             });
 
             if (response.ok) {
-                this.setState({ livePipelineName: "", rtspUrl: "", rtspUsername: "", rtspPassword: "", livePipelineTopologyName: "", videoName: "", deviceId: ""},
+                this.setState({ livePipelineName: "", rtspUrl: "", rtspUsername: "", rtspPassword: "", livePipelineTopologyName: "", videoName: "", deviceId: "", livePipelineEnabled: false},
                     async () => await this.getLivePipelines());
 
                 // Create Cloud LivePipeline
