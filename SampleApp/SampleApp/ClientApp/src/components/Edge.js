@@ -573,7 +573,7 @@ export class Edge extends Component {
     }
 
     setFormData(event) {
-        const elementType = event.target.parentElement.parentElement.name;
+        const elementType = event.target.parentElement.parentElement.parentElement.parentElement.name;
         const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
         this.setState({
             ...this.state,
@@ -640,11 +640,15 @@ export class Edge extends Component {
                             <h5>Create a HTTP inferencing topology using YOLOv3-based inference server</h5>
                             See <a href="https://github.com/Azure/video-analyzer/tree/main/pipelines/live/topologies/httpExtension" title="See pipeline topology">Pipeline Topology</a>
                             <form name="pipelinetopology" onSubmit={(e) => this.createPipelineTopology(e)}>
-                                <fieldset>
-                                    <label>Name:</label>&nbsp;
-                                    <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input" />
-                                </fieldset>
-                                <button type="submit" disabled={!this.state.pipelineTopologiesEnabled}>Create</button>
+                                <div className="div-table">
+                                    <div className="div-table-row">
+                                        <div className="div-table-col-new-pipeline">Name:</div>
+                                        <div className="div-table-col">
+                                            <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <button className="btn btn-primary" type="submit" disabled={!this.state.pipelineTopologiesEnabled}>Create</button>
                             </form>
                         </div>
                     :
@@ -741,42 +745,58 @@ export class Edge extends Component {
                 </table>
                 <h5>Add new</h5>
                 <form name="livepipeline" onSubmit={(e) => this.createLivePipeline(e)}>
-                    <fieldset >
-                        <label>Topology Name:</label>&nbsp;
-                         <select name="livePipelineTopologyName" value={this.state.livePipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input">
-                            <option value="">Select:</option>
-                            {
-                                this.state.pipelineTopologies.map((item, index) =>
-                                    <option key={index} value={item.name}>{item.name}</option>
-                                )
-                            }
-                        </select>
-                    </fieldset>
-                    <fieldset>
-                        <label>Name:</label>&nbsp;
-                        <input name="livePipelineName" value={this.state.livePipelineName} onChange={(e) => this.setFormData(e)} className="input"/>
-                    </fieldset>
-                    <fieldset >
-                        <label>rtsp Url:</label>&nbsp;
-                        <input name="rtspUrl" value={this.state.rtspUrl} onChange={(e) => this.setFormData(e)} placeholder="rtsp://rtspsim:554/media/lots_015.mkv" className="input"/>
-                    </fieldset>
-                    <fieldset >
-                        <label>rtsp Username:</label>&nbsp;
-                        <input name="rtspUsername" value={this.state.rtspUsername} onChange={(e) => this.setFormData(e)} placeholder="username" className="input"/>
-                    </fieldset>
-                    <fieldset >
-                        <label>rtsp Password:</label>&nbsp;
-                        <input type="password" name="rtspPassword" value={this.state.rtspPassword} onChange={(e) => this.setFormData(e)} placeholder="*******" className="input"/>
-                    </fieldset>
-                    <fieldset >
-                        <label>Video Name:</label>&nbsp;
-                        <input name="videoName" value={this.state.videoName} onChange={(e) => this.setFormData(e)} placeholder="SampleVideo" className="input"/>
-                    </fieldset>
-                    <fieldset >
-                        <label>Device Id:</label>&nbsp;
-                        <input name="deviceId" value={this.state.deviceId} onChange={(e) => this.setFormData(e)} placeholder="Camera1" className="input" />
-                    </fieldset>
-                    <button type="submit" disabled={!this.state.livePipelineEnabled}>Create</button>
+                    <div className="div-table">
+                        <div className="div-table-row">
+                            <div className="div-table-col-new-pipeline">Topology Name:</div>
+                            <div className="div-table-col">
+                                <select name="livePipelineTopologyName" value={this.state.livePipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input">
+                                    <option value="">Select:</option>
+                                    {
+                                        this.state.pipelineTopologies.map((item, index) =>
+                                            <option key={index} value={item.name}>{item.name}</option>
+                                        )
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div className="div-table-row">
+                            <div className="div-table-col-new-pipeline">Name:</div>
+                            <div className="div-table-col">
+                                <input name="livePipelineName" value={this.state.livePipelineName} onChange={(e) => this.setFormData(e)} className="input" />
+                            </div>
+                        </div>
+                        <div className="div-table-row">
+                            <div className="div-table-col-new-pipeline">rtps Url:</div>
+                            <div className="div-table-col">
+                                <input name="rtspUrl" value={this.state.rtspUrl} onChange={(e) => this.setFormData(e)} placeholder="rtsp://rtspsim:554/media/lots_015.mkv" className="input" />
+                            </div>
+                        </div>
+                        <div className="div-table-row">
+                            <div className="div-table-col-new-pipeline">rtps Username:</div>
+                            <div className="div-table-col">
+                                <input name="rtspUsername" value={this.state.rtspUsername} onChange={(e) => this.setFormData(e)} placeholder="username" className="input" />
+                            </div>
+                        </div>
+                        <div className="div-table-row">
+                            <div className="div-table-col-new-pipeline">rtsp Password:</div>
+                            <div className="div-table-col">
+                                <input type="password" name="rtspPassword" value={this.state.rtspPassword} onChange={(e) => this.setFormData(e)} placeholder="*******" className="input" />
+                            </div>
+                        </div>
+                        <div className="div-table-row">
+                            <div className="div-table-col-new-pipeline">Video name:</div>
+                            <div className="div-table-col">
+                                <input name="videoName" value={this.state.videoName} onChange={(e) => this.setFormData(e)} placeholder="SampleVideo" className="input" />
+                            </div>
+                        </div>
+                        <div className="div-table-row">
+                            <div className="div-table-col-new-pipeline">Device id:</div>
+                            <div className="div-table-col">
+                                <input name="deviceId" value={this.state.deviceId} onChange={(e) => this.setFormData(e)} placeholder="Camera1" className="input" />
+                            </div>
+                        </div>
+                    </div>
+                    <button className="btn btn-primary" type="submit" disabled={!this.state.livePipelineEnabled}>Create</button>
                 </form>
             </div>
         );

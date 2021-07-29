@@ -157,7 +157,11 @@ export class Demo extends Component {
                 console.log(response.statusText);
             }
 
-            this.setState({ livePipeline: { edgePipeline: activePipeline, cloudPipeline: activeCloudPipeline } });
+            this.setState({ livePipeline: { edgePipeline: activePipeline, cloudPipeline: activeCloudPipeline } }, async () => {
+                if (activePipeline != null && activePipeline.properties.state.toLowerCase() === "active") {
+                    await this.listenToEvent(activeCloudPipeline.name);
+                }
+            });
         }
         catch (e) {
             console.log(e);

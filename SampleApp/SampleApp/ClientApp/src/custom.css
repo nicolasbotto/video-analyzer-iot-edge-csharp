@@ -47,3 +47,14 @@ code {
     width: 50%;
     text-align: left;
 }
+
+.div-table-col-new-pipeline {
+    float: left; /* fix for  buggy browsers */
+    display: table-column;
+    width: 12%;
+    text-align: left;
+}
+
+.div-table-col input, .div-table-col select {
+    width: 60%;
+}
