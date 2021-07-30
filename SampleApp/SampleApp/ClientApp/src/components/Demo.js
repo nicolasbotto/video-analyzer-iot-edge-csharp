@@ -270,6 +270,11 @@ export class Demo extends Component {
                 ?
                 <p><em>Loading Edge Live Pipelines...</em></p>
                 :
+                livePipeline.edgePipeline === undefined ?
+                    <div>
+                        There is no active live pipeline.
+                    </div>
+                :
                 <div>
                     <h5 id="tabelLabel">Instead of just sitting and watching the camera feed, let's see how we can use AVA to alert us about vehicle detection. Here's what we need to do:</h5>
                     <br/>

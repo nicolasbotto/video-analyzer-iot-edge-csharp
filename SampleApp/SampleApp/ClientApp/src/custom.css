@@ -58,3 +58,7 @@ code {
 .div-table-col input, .div-table-col select {
     width: 60%;
 }
+
+.div-table-col [type=checkbox] {
+    width:3%;
+}

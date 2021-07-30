@@ -129,12 +129,12 @@ export class Edge extends Component {
                     this.setState({ cloudLivePipelines: newCloudLivePipelines });
                 }
                 catch (cloudEx) {
-                    throw new Error(`Cannot delete the Cloud LivePipeline ${livePipeline}: ${cloudEx}`);
+                    throw new Error(`Cannot delete the Cloud Live Pipeline ${livePipeline}: ${cloudEx}`);
                 }
             }
             else {
                 const errorMessageObj = JSON.parse(await response.json());
-                throw new Error(`Cannot delete LivePipeline: ${errorMessageObj.error.message}`);
+                throw new Error(`Cannot delete Live Pipeline: ${errorMessageObj.error.message}`);
             }
         }
         catch (e) {
@@ -157,13 +157,13 @@ export class Edge extends Component {
                     this.api.deletePipelineTopology(pipelineTopologyName);
                 }
                 catch (cloudEx) {
-                    throw new Error(`Cannot delete the Cloud PipelineTopology ${pipelineTopologyName}: ${cloudEx}`);
+                    throw new Error(`Cannot delete the Cloud Pipeline Topology ${pipelineTopologyName}: ${cloudEx}`);
                 }
             }
             else {
                 const errorMessageObj = JSON.parse(await response.json());
                 const errorMessage = errorMessageObj.error.details.map(x => x.message);
-                throw new Error(`Cannot delete pipelineTopology: ${errorMessage}`);
+                throw new Error(`Cannot delete pipeline Topology: ${errorMessage}`);
             }
         }
         catch (e) {
@@ -318,7 +318,7 @@ export class Edge extends Component {
                 }
             }
             else {
-                const errorMessageObj = await response.json();
+                const errorMessageObj = JSON.parse(await response.json());
                 throw new Error(`Cannot create the pipelineTopology: ${errorMessageObj.error.message}`);
             }
         }
@@ -364,16 +364,16 @@ export class Edge extends Component {
                     cloudLivePipelines.push(body);
                 }
                 catch (cloudEx) {
-                    alert(`Cannot create the Cloud LivePipeline: ${cloudEx}`);
+                    alert(`Cannot create the Cloud Live Pipeline: ${cloudEx}`);
                 }
             }
             else {
-                const errorMessageObj = await response.json();
+                const errorMessageObj = JSON.parse(await response.json());
                 alert(`Cannot create the LivePipeline: ${errorMessageObj.error.message}`);
             }
         }
         catch (e) {
-            alert(`Cannot create the Cloud LivePipeline: ${e}`);
+            alert(`Cannot create the Cloud Live Pipeline: ${e}`);
         }
         finally {
             this.setState({ loadingLivePipelines: false });
@@ -545,7 +545,7 @@ export class Edge extends Component {
             });
 
             if (!response.ok) {
-                const errorMessageObj = await response.json();
+                const errorMessageObj = JSON.parse(await response.json());
                 throw new Error(`Cannot listen to events: ${errorMessageObj.error.message}`);
             }
         }
@@ -556,14 +556,13 @@ export class Edge extends Component {
 
     async stopToEvent(pipelineName) {
         const url = `/VideoAnalyzer/StopListeningToEvents?livePipelineName=${pipelineName}`;
-        const { events } = this.state;
         try {
             const response = await fetch(url, {
                 method: 'GET'
             });
 
             if (!response.ok) {
-                const errorMessageObj = await response.json();
+                const errorMessageObj = JSON.parse(await response.json());
                 throw new Error(`Cannot stop listening to events: ${errorMessageObj.error.message}`);
             }
         }
@@ -605,52 +604,57 @@ export class Edge extends Component {
         return (
             <div>
                 <h3>Edge Pipeline Topologies</h3>
-                <table className='table table-striped' aria-labelledby="tabelLabel">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Parameters</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            pipelineTopologies.map((data, index) =>
-                                <tr key={index}>
-                                    <td>{data.name}</td>
-                                    <td>{data.properties.description}</td>
-                                    <td>
-                                        <ul>
-                                            {data.properties.parameters.filter(x => x.name.includes("rtsp")).map((p,i) =>
-                                                <li key={i}>{p.name}</li>
-                                            )}
-                                        </ul>
-                                    </td>
-                                    <td>
-                                        <button className="btn btn-primary" onClick={() => this.deletePipelineTopology(data.name)}>Delete</button>
-                                    </td>
+                <h5>Create a HTTP inferencing topology using YOLOv3-based inference server</h5>
+                See <a href="https://github.com/Azure/video-analyzer/tree/main/pipelines/live/topologies/httpExtension" title="See pipeline topology">Pipeline Topology</a>
+                <br /><br />
+                {
+                    pipelineTopologies.length > 0 ?
+
+                        <table className='table table-striped' aria-labelledby="tabelLabel">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Parameters</th>
+                                    <th>Action</th>
                                 </tr>
-                            )}
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody>
+                                {
+                                    pipelineTopologies.map((data, index) =>
+                                        <tr key={index}>
+                                            <td>{data.name}</td>
+                                            <td>{data.properties.description}</td>
+                                            <td>
+                                                <ul>
+                                                    {data.properties.parameters.filter(x => x.name.includes("rtsp")).map((p, i) =>
+                                                        <li key={i}>{p.name}</li>
+                                                    )}
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <button className="btn btn-primary" onClick={() => this.deletePipelineTopology(data.name)}>Delete</button>
+                                            </td>
+                                        </tr>
+                                    )}
+                            </tbody>
+                        </table>
+                        :
+                        null
+                }
                 {
                     pipelineTopologies.length == 0 ?
-                        <div>
-                            <h5>Create a HTTP inferencing topology using YOLOv3-based inference server</h5>
-                            See <a href="https://github.com/Azure/video-analyzer/tree/main/pipelines/live/topologies/httpExtension" title="See pipeline topology">Pipeline Topology</a>
-                            <form name="pipelinetopology" onSubmit={(e) => this.createPipelineTopology(e)}>
-                                <div className="div-table">
-                                    <div className="div-table-row">
-                                        <div className="div-table-col-new-pipeline">Name:</div>
-                                        <div className="div-table-col">
-                                            <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input" />
-                                        </div>
-                                    </div>
+                    <form name="pipelinetopology" onSubmit={(e) => this.createPipelineTopology(e)}>
+                        <div className="div-table">
+                            <div className="div-table-row">
+                                <div className="div-table-col-new-pipeline">Name:</div>
+                                <div className="div-table-col">
+                                    <input name="pipelineTopologyName" value={this.state.pipelineTopologyName} onChange={(e) => this.setFormData(e)} className="input" />
                                 </div>
-                                <button className="btn btn-primary" type="submit" disabled={!this.state.pipelineTopologiesEnabled}>Create</button>
-                            </form>
+                            </div>
                         </div>
+                        <button className="btn btn-primary" type="submit" disabled={!this.state.pipelineTopologiesEnabled}>Create</button>
+                    </form>
                     :
                     null
                 }
