@@ -76,7 +76,7 @@ export class Edge extends Component {
             updatedEvents[pipelineName].push(eventData);
 
             this.setState({ events: updatedEvents }, async () => {
-                if (updatedEvents[pipelineName].length == Edge.numberOfEvents) {
+                if (updatedEvents[pipelineName].length > Edge.numberOfEvents) {
                     await this.stopToEvent(pipelineName);
                 }
             });

@@ -21,7 +21,7 @@ export class Demo extends Component {
             videoName: "",
             livePipelineName: "",
             connection: null,
-            alertFired: { fired: false, timestamp: null },
+            alertFired: { fired: false, timestamp: null, inference: null },
             appSettings: {},
             deviceId: "",
             loading: true,
@@ -51,6 +51,9 @@ export class Demo extends Component {
             .build();
 
         connection.on("ReceivedNewEvent", (eventData, pipelineName) => {
+            // eventData follows the inference schema:
+            //https://docs.microsoft.com/en-us/azure/azure-video-analyzer/video-analyzer-docs/inference-metadata-schema
+
             console.log('Added event');
             const { events } = this.state;
 
@@ -63,12 +66,13 @@ export class Demo extends Component {
 
             updatedEvents[pipelineName].push(eventData);
 
-            this.setState({ events: updatedEvents }, async () => {
-                if (updatedEvents[pipelineName].length == Demo.numberOfEvents) {
-                    await this.stopToEvent(pipelineName);
-                    this.setState({ alertFired: { fired: true, timestamp: new Date() } });
-                }
-            });
+            this.setState({ events: updatedEvents });
+
+            if (updatedEvents[pipelineName].length > Demo.numberOfEvents) {
+                this.stopToEvent(pipelineName)
+                    .then(() => this.setState({ alertFired: { fired: true, timestamp: new Date(), inference: JSON.parse(updatedEvents[pipelineName][Demo.numberOfEvents]) } })
+                );
+            }
         });
 
         connection.on("InitVideo", (livePipelineName) => {
@@ -118,7 +122,7 @@ export class Demo extends Component {
                         updatedEvents = { ...updatedEvents, ...newEvent };
                     }
 
-                    this.setState({ activeLivePipeline: "", events: updatedEvents, alertFired: { fired: false, timestamp: null } });
+                    this.setState({ activeLivePipeline: "", events: updatedEvents, alertFired: { fired: false, timestamp: null, inference: null } });
                 }
             }
             else {
@@ -258,9 +262,10 @@ export class Demo extends Component {
         this.setState({ videoReady: true });
     }
 
-    getAlarmText(timestamp) {
-        const now = timestamp.toLocaleString().split(",");
-        return `Alert: Detected at ${now[0]} at ${now[1].trim()}.`;
+    getAlarmText(alert) {
+        const now = alert.timestamp.toLocaleString().split(",");
+        const tag = alert.inference.inferences[0].entity.tag.value;
+        return `Alert: Detected ${tag} at ${now[0]} at ${now[1].trim()}.`;
     }
 
     render() {
@@ -312,7 +317,7 @@ export class Demo extends Component {
                                     {
                                         alertFired.fired ?
                                             <div>
-                                                <img src={AlertImage} />&nbsp;<label style={{ color: 'red' }}>{this.getAlarmText(alertFired.timestamp)}</label><br />
+                                                <img src={AlertImage} />&nbsp;<label style={{ color: 'red' }}>{this.getAlarmText(alertFired)}</label><br />
                                                 Click <label onClick={() => this.getVideoPlayback(livePipeline.edgePipeline.name)}><b>here</b></label> to view camera feed.
                                             </div>
                                         :
