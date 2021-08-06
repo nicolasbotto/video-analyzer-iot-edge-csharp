@@ -312,14 +312,9 @@ namespace SampleApp.Controllers
 
             try
             {
-                string firstPartition = (await consumer.GetPartitionIdsAsync(AppConstants.TokenSource[livePipelineName].Token)).Last();
-                PartitionProperties properties = await consumer.GetPartitionPropertiesAsync(firstPartition, AppConstants.TokenSource[livePipelineName].Token);
-                EventPosition startingPosition = EventPosition.FromSequenceNumber(properties.LastEnqueuedSequenceNumber);
                 var firstEvent = true;
 
-                await foreach (PartitionEvent partitionEvent in consumer.ReadEventsFromPartitionAsync(
-                    firstPartition,
-                    startingPosition,
+                await foreach (PartitionEvent partitionEvent in consumer.ReadEventsAsync(
                     AppConstants.TokenSource[livePipelineName].Token))
                 {
                     if (firstEvent)
