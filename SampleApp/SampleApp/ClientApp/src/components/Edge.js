@@ -133,8 +133,8 @@ export class Edge extends Component {
                 }
             }
             else {
-                const errorMessageObj = JSON.parse(await response.json());
-                throw new Error(`Cannot delete Live Pipeline: ${errorMessageObj.error.message}`);
+                const errorMessageObj = await response.json();
+                throw new Error(`Cannot delete Live Pipeline: ${errorMessageObj}`);
             }
         }
         catch (e) {
@@ -161,7 +161,7 @@ export class Edge extends Component {
                 }
             }
             else {
-                const errorMessageObj = JSON.parse(await response.json());
+                const errorMessageObj = await response.json();
                 const errorMessage = errorMessageObj.error.details.map(x => x.message);
                 throw new Error(`Cannot delete pipeline Topology: ${errorMessage}`);
             }
@@ -318,8 +318,8 @@ export class Edge extends Component {
                 }
             }
             else {
-                const errorMessageObj = JSON.parse(await response.json());
-                throw new Error(`Cannot create the pipelineTopology: ${errorMessageObj.error.message}`);
+                const errorMessageObj = await response.json();
+                throw new Error(`Cannot create the pipelineTopology: ${errorMessageObj}`);
             }
         }
         catch (e) {
@@ -368,8 +368,8 @@ export class Edge extends Component {
                 }
             }
             else {
-                const errorMessageObj = JSON.parse(await response.json());
-                alert(`Cannot create the LivePipeline: ${errorMessageObj.error.message}`);
+                const errorMessageObj = await response.json();
+                alert(`Cannot create the LivePipeline: ${errorMessageObj}`);
             }
         }
         catch (e) {
@@ -470,13 +470,14 @@ export class Edge extends Component {
                 data = jsonResponse;
             }
             else {
-                console.log(response.statusText);
+                const errorMessageObj = await response.json();
+                throw new Error(errorMessageObj);
             }
 
             this.setState({ pipelineTopologies: data });
         }
         catch (e) {
-            console.log(e);
+            alert(`Error retrieving pipeline topologies: ${e}`);
         }
         finally {
             this.setState({ loadingPipelineTopologies: false });
@@ -500,7 +501,8 @@ export class Edge extends Component {
                 cloudLivePipelines = await this.api.getLivePipelines();
             }
             else {
-                console.log(response.statusText);
+                const errorMessageObj = await response.json();
+                throw new Error(errorMessageObj);
             }
 
             this.setState({ livePipelines: data, cloudLivePipelines: cloudLivePipelines }, async () => {
@@ -512,7 +514,7 @@ export class Edge extends Component {
             });
         }
         catch (e) {
-            console.log(e);
+            alert(`Error retrieving live pipelines: ${e}`);
         }
         finally {
             this.setState({ loadingLivePipelines: false });
@@ -545,8 +547,8 @@ export class Edge extends Component {
             });
 
             if (!response.ok) {
-                const errorMessageObj = JSON.parse(await response.json());
-                throw new Error(`Cannot listen to events: ${errorMessageObj.error.message}`);
+                const errorMessageObj = await response.json();
+                throw new Error(`Cannot listen to events: ${errorMessageObj}`);
             }
         }
         catch (e) {
@@ -562,8 +564,8 @@ export class Edge extends Component {
             });
 
             if (!response.ok) {
-                const errorMessageObj = JSON.parse(await response.json());
-                throw new Error(`Cannot stop listening to events: ${errorMessageObj.error.message}`);
+                const errorMessageObj = await response.json();
+                throw new Error(`Cannot stop listening to events: ${errorMessageObj}`);
             }
         }
         catch (e) {

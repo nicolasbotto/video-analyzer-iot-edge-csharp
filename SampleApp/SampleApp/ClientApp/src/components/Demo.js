@@ -276,7 +276,7 @@ export class Demo extends Component {
                 ?
                 <p><em>Loading Edge Live Pipelines...</em></p>
                 :
-                livePipeline.edgePipeline === undefined ?
+                livePipeline.edgePipeline === null || livePipeline.edgePipeline === undefined ?
                     <div>
                         There is no active live pipeline.
                     </div>
