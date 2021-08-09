@@ -158,17 +158,18 @@ export class Demo extends Component {
                 activeCloudPipeline = cloudLivePipelines.find(x => x.name === activePipeline.name);
             }
             else {
-                console.log(response.statusText);
+                throw new Error(response.statusText);
             }
 
             this.setState({ livePipeline: { edgePipeline: activePipeline, cloudPipeline: activeCloudPipeline } }, async () => {
-                if (activePipeline != null && activePipeline.properties.state.toLowerCase() === "active") {
+                if (activePipeline != undefined && activePipeline.properties.state.toLowerCase() === "active") {
                     await this.listenToEvent(activeCloudPipeline.name);
                 }
             });
         }
         catch (e) {
-            console.log(e);
+            alert("Operation failed, please check the console log.");
+            console.log(`Failed to retrive live pipelines: ${e}`);
         }
         finally {
             this.setState({ loadingLivePipelines: false });
