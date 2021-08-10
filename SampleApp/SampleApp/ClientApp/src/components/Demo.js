@@ -11,7 +11,6 @@ export class Demo extends Component {
     constructor(props) {
         super(props);
         this.api = new CloudApi();
-        this.api.init();
 
         this.state = {
             livePipeline: { edgePipeline: null, cloudPipeline: null },
@@ -34,6 +33,7 @@ export class Demo extends Component {
     }
 
     async componentDidMount() {
+        await this.api.init();
         await this.getConfig();
         await this.getLivePipelines();
         await this.initConnection();

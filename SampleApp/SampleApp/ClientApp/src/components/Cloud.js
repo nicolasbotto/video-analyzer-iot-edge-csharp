@@ -9,7 +9,6 @@ export class Cloud extends Component {
     constructor(props) {
         super(props);
         this.api = new CloudApi();
-        this.api.init();
 
         this.state = {
             videoAnalyzers: [],
@@ -43,6 +42,7 @@ export class Cloud extends Component {
     }
 
     async componentDidMount() {
+        await this.api.init();
         await this.getConfig();
         await this.getToken();
         await this.listVideoAnalyzers();
