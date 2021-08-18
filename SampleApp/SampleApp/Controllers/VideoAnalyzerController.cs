@@ -314,6 +314,9 @@ namespace SampleApp.Controllers
             {
                 var firstEvent = true;
 
+                DateTimeOffset oneSecondAgo = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromSeconds(1));
+                EventPosition startingPosition = EventPosition.FromEnqueuedTime(oneSecondAgo);
+
                 await foreach (PartitionEvent partitionEvent in consumer.ReadEventsAsync(
                     AppConstants.TokenSource[livePipelineName].Token))
                 {
