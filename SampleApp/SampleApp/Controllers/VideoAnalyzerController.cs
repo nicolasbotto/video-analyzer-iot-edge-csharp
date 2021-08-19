@@ -317,17 +317,22 @@ namespace SampleApp.Controllers
                 DateTimeOffset oneSecondAgo = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromSeconds(1));
                 EventPosition startingPosition = EventPosition.FromEnqueuedTime(oneSecondAgo);
 
-                await foreach (PartitionEvent partitionEvent in consumer.ReadEventsAsync(
-                    AppConstants.TokenSource[livePipelineName].Token))
-                {
-                    if (firstEvent)
+                var partitions = await consumer.GetPartitionIdsAsync();
+
+                foreach (var partition in partitions) {
+                    await foreach (PartitionEvent partitionEvent in consumer.ReadEventsFromPartitionAsync(partition, startingPosition, AppConstants.TokenSource[livePipelineName].Token))
                     {
-                        firstEvent = false;
-                        await EventHub.Clients.All.SendAsync("InitVideo", livePipelineName);
+                        if (firstEvent)
+                        {
+                            firstEvent = false;
+                            await EventHub.Clients.All.SendAsync("InitVideo", livePipelineName);
+                        }
+
+                        await EventHub.Clients.All.SendAsync("ReceivedNewEvent", partitionEvent.Data.EventBody.ToString(), livePipelineName);
                     }
-                    
-                    await EventHub.Clients.All.SendAsync("ReceivedNewEvent", partitionEvent.Data.EventBody.ToString(), livePipelineName);
                 }
+
+
                 return StatusCode(204);
             }
             catch (TaskCanceledException)
