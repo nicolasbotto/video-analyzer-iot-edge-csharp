@@ -264,9 +264,10 @@ export class Demo extends Component {
     }
 
     getAlarmText(alert) {
-        const now = alert.timestamp.toLocaleString().split(",");
-        const tag = alert.inference.inferences[0].entity.tag.value;
-        return `Alert: Detected ${tag} at ${now[0]} at ${now[1].trim()}.`;
+        const date = alert.timestamp.toLocaleDateString();
+        const time = alert.timestamp.toLocaleTimeString();
+        const tag = alert.inference !== undefined ? alert.inference.inferences[0].entity.tag.value : '';
+        return `Alert: Detected ${tag} at ${date} at ${time}.`;
     }
 
     render() {
