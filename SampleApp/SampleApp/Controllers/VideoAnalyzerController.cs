@@ -19,6 +19,7 @@ using SampleApp.Hubs;
 using SampleApp.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -319,19 +320,38 @@ namespace SampleApp.Controllers
 
                 var partitions = await consumer.GetPartitionIdsAsync();
 
-                foreach (var partition in partitions) {
-                    await foreach (PartitionEvent partitionEvent in consumer.ReadEventsFromPartitionAsync(partition, startingPosition, AppConstants.TokenSource[livePipelineName].Token))
-                    {
-                        if (firstEvent)
-                        {
-                            firstEvent = false;
-                            await EventHub.Clients.All.SendAsync("InitVideo", livePipelineName);
-                        }
+                var readEventTasks = new Task[partitions.Length];
 
-                        await EventHub.Clients.All.SendAsync("ReceivedNewEvent", partitionEvent.Data.EventBody.ToString(), livePipelineName);
-                    }
+                for (var i=0; i < partitions.Length; i++) {
+                    var partition = partitions[i];
+                    readEventTasks[i] = Task.Run(async() => {
+                        try
+                        {
+                            await foreach (PartitionEvent partitionEvent in consumer.ReadEventsFromPartitionAsync(partition, startingPosition, AppConstants.TokenSource[livePipelineName].Token))
+                            {
+                                Debug.WriteLine("processing partition: " + partition);
+                                if (firstEvent)
+                                {
+                                    firstEvent = false;
+                                    await EventHub.Clients.All.SendAsync("InitVideo", livePipelineName);
+                                }
+
+                                await EventHub.Clients.All.SendAsync("ReceivedNewEvent", partitionEvent.Data.EventBody.ToString(), livePipelineName);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //This is expected if the cancellation token is signaled
+                            Debug.WriteLine("Event listening task has been canceled.");
+                        }
+                        finally
+                        {
+                            await Task.CompletedTask;
+                        }
+                    });
                 }
 
+                Task.WaitAll(readEventTasks);
 
                 return StatusCode(204);
             }
